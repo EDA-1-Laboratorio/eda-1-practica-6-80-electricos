@@ -21,7 +21,7 @@ struct double_linked_queue{
     int cnt;
     node *head;
     node *tail;
-}
+};
 
 typedef     struct double_linked_queue          double_linked_queue;        // Definimos el tipo de dato cola (queue, se pronuncia "quiu").
 
