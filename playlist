@@ -1,1 +1,362 @@
+/* playlist_completo.c - Versión completa en un solo archivo */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+#define EMPTY 0
+#define FULL 10000
+#define MAX_SONG_LEN 100
+
+typedef char data[MAX_SONG_LEN];
+typedef enum {FALSO, VERDADERO} boolean;
+
+struct elem {
+    data d;
+    struct elem *next;
+};
+
+typedef struct elem elem;
+
+struct circular_queue {
+    int cnt;
+    elem *head;
+    elem *tail;
+};
+
+typedef struct circular_queue circular_queue;
+
+/* Prototipos de funciones */
+void initialize(circular_queue *q);
+void enqueue(data d, circular_queue *q);
+data deque(circular_queue *q);
+data head(const circular_queue *q);
+data tail(const circular_queue *q);
+boolean empty(const circular_queue *q);
+boolean full(const circular_queue *q);
+void enqueue_front(data d, circular_queue *q);
+void display_playlist(const circular_queue *q);
+int get_count(const circular_queue *q);
+
+/* Implementaciones */
+void initialize(circular_queue *q) {
+    q->cnt = 0;
+    q->head = NULL;
+    q->tail = NULL;
+}
+
+void enqueue(data d, circular_queue *q) {
+    if (full(q)) {
+        printf("Error: La cola está llena\n");
+        return;
+    }
+    
+    elem *new_elem = (elem *)malloc(sizeof(elem));
+    if (!new_elem) {
+        printf("Error: No se pudo asignar memoria\n");
+        return;
+    }
+    
+    strcpy(new_elem->d, d);
+    new_elem->next = NULL;
+    
+    if (empty(q)) {
+        q->head = new_elem;
+        q->tail = new_elem;
+    } else {
+        q->tail->next = new_elem;
+        q->tail = new_elem;
+    }
+    q->cnt++;
+}
+
+void enqueue_front(data d, circular_queue *q) {
+    if (full(q)) {
+        printf("Error: La cola está llena\n");
+        return;
+    }
+    
+    elem *new_elem = (elem *)malloc(sizeof(elem));
+    if (!new_elem) {
+        printf("Error: No se pudo asignar memoria\n");
+        return;
+    }
+    
+    strcpy(new_elem->d, d);
+    new_elem->next = q->head;
+    
+    if (empty(q)) {
+        q->tail = new_elem;
+    }
+    
+    q->head = new_elem;
+    q->cnt++;
+}
+
+data deque(circular_queue *q) {
+    if (empty(q)) {
+        printf("Error: La cola está vacía\n");
+        data empty = "";
+        return empty;
+    }
+    
+    elem *temp = q->head;
+    data result;
+    strcpy(result, temp->d);
+    
+    q->head = q->head->next;
+    
+    if (q->head == NULL) {
+        q->tail = NULL;
+    }
+    
+    free(temp);
+    q->cnt--;
+    return result;
+}
+
+data head(const circular_queue *q) {
+    if (empty(q)) {
+        printf("Error: La cola está vacía\n");
+        static data empty = "";
+        return empty;
+    }
+    return q->head->d;
+}
+
+data tail(const circular_queue *q) {
+    if (empty(q)) {
+        printf("Error: La cola está vacía\n");
+        static data empty = "";
+        return empty;
+    }
+    return q->tail->d;
+}
+
+boolean empty(const circular_queue *q) {
+    return (q->cnt == 0) ? VERDADERO : FALSO;
+}
+
+boolean full(const circular_queue *q) {
+    return (q->cnt == FULL) ? VERDADERO : FALSO;
+}
+
+int get_count(const circular_queue *q) {
+    return q->cnt;
+}
+
+void display_playlist(const circular_queue *q) {
+    if (empty(q)) {
+        printf("\n╔══════════════════════════════════════╗\n");
+        printf("║         PLAYLIST VACÍA               ║\n");
+        printf("╚══════════════════════════════════════╝\n");
+        return;
+    }
+    
+    elem *current = q->head;
+    int pos = 1;
+    
+    printf("\n╔══════════════════════════════════════╗\n");
+    printf("║            PLAYLIST                   ║\n");
+    printf("╠══════════════════════════════════════╣\n");
+    
+    while (current != NULL) {
+        printf("║ %2d. %-34s ║\n", pos++, current->d);
+        current = current->next;
+    }
+    
+    printf("╠══════════════════════════════════════╣\n");
+    printf("║ Total: %-2d canciones                    ║\n", q->cnt);
+    printf("╚══════════════════════════════════════╝\n");
+}
+
+/* Catálogo de canciones disponibles */
+const char* catalogo_canciones[] = {
+    "Bohemian Rhapsody - Queen",
+    "Imagine - John Lennon",
+    "Hey Jude - The Beatles",
+    "Stairway to Heaven - Led Zeppelin",
+    "Hotel California - Eagles",
+    "Smells Like Teen Spirit - Nirvana",
+    "Like a Rolling Stone - Bob Dylan",
+    "Wonderwall - Oasis",
+    "Comfortably Numb - Pink Floyd",
+    "Billie Jean - Michael Jackson",
+    "Shape of You - Ed Sheeran",
+    "Despacito - Luis Fonsi",
+    "Rolling in the Deep - Adele",
+    "Uptown Funk - Mark Ronson",
+    "Happy - Pharrell Williams"
+};
+
+#define TOTAL_CANCIONES 15
+
+/* Mostrar catálogo de canciones */
+void mostrar_catalogo() {
+    printf("\n╔══════════════════════════════════════════════════════════╗\n");
+    printf("║                  CATÁLOGO DE CANCIONES                    ║\n");
+    printf("╠══════════════════════════════════════════════════════════╣\n");
+    
+    int columnas = 2;
+    int filas = (TOTAL_CANCIONES + columnas - 1) / columnas;
+    
+    for (int i = 0; i < filas; i++) {
+        printf("║");
+        for (int j = 0; j < columnas; j++) {
+            int idx = i + j * filas;
+            if (idx < TOTAL_CANCIONES) {
+                printf(" %2d. %-28s", idx + 1, catalogo_canciones[idx]);
+            } else {
+                printf(" %-31s", "");
+            }
+            if (j == 0) printf(" ║");
+        }
+        printf("\n");
+    }
+    printf("╚══════════════════════════════════════════════════════════╝\n");
+}
+
+/* Mostrar menú principal */
+void mostrar_menu() {
+    printf("\n╔══════════════════════════════════════╗\n");
+    printf("║     SISTEMA DE PLAYLIST MUSICAL      ║\n");
+    printf("╠══════════════════════════════════════╣\n");
+    printf("║ Operaciones básicas de cola:         ║\n");
+    printf("║ 1. Agregar canción al final (enqueue)║\n");
+    printf("║ 2. Reproducir primera (deque)        ║\n");
+    printf("║ 3. Ver primera canción (head)        ║\n");
+    printf("║ 4. Ver última canción (tail)         ║\n");
+    printf("║                                      ║\n");
+    printf("║ Operaciones adicionales:             ║\n");
+    printf("║ 5. Agregar canción al inicio         ║\n");
+    printf("║ 6. Ver playlist completa             ║\n");
+    printf("║ 7. Mostrar catálogo                  ║\n");
+    printf("║ 8. Ver total de canciones            ║\n");
+    printf("║ 9. ¿Playlist vacía?                  ║\n");
+    printf("║ 0. Salir                             ║\n");
+    printf("╚══════════════════════════════════════╝\n");
+    printf("Opción: ");
+}
+
+/* Función para limpiar buffer */
+void limpiar_buffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+int main() {
+    circular_queue playlist;
+    initialize(&playlist);
+    
+    int opcion, cancion_num;
+    char nombre_cancion[MAX_SONG_LEN];
+    
+    printf("\n🎵 ¡Bienvenido al Sistema de Playlist Musical! \n");
+    printf("Usando estructura circular_queue (cola simple ligada)\n\n");
+    
+    do {
+        mostrar_menu();
+        scanf("%d", &opcion);
+        
+        switch(opcion) {
+            case 1:
+                printf("\n Seleccione el número de canción (1-%d): ", TOTAL_CANCIONES);
+                scanf("%d", &cancion_num);
+                if (cancion_num >= 1 && cancion_num <= TOTAL_CANCIONES) {
+                    strcpy(nombre_cancion, catalogo_canciones[cancion_num - 1]);
+                    enqueue(nombre_cancion, &playlist);
+                    printf("✓ Canción agregada al FINAL de la playlist\n");
+                    printf("   → \"%s\"\n", nombre_cancion);
+                } else {
+                    printf("✗ Número de canción inválido\n");
+                }
+                break;
+                
+            case 2:
+                if (!empty(&playlist)) {
+                    char cancion_actual[MAX_SONG_LEN];
+                    strcpy(cancion_actual, deque(&playlist));
+                    printf("\n▶▶ REPRODUCIENDO: %s\n", cancion_actual);
+                    printf("   Canción eliminada de la playlist\n");
+                } else {
+                    printf("\n✗ No hay canciones en la playlist\n");
+                }
+                break;
+                
+            case 3:
+                if (!empty(&playlist)) {
+                    printf("\n🎵 Primera canción en espera: %s\n", head(&playlist));
+                } else {
+                    printf("\n✗ Playlist vacía\n");
+                }
+                break;
+                
+            case 4:
+                if (!empty(&playlist)) {
+                    printf("\n🎵 Última canción agregada: %s\n", tail(&playlist));
+                } else {
+                    printf("\n✗ Playlist vacía\n");
+                }
+                break;
+                
+            case 5:
+                printf("\n📀 Seleccione el número de canción (1-%d): ", TOTAL_CANCIONES);
+                scanf("%d", &cancion_num);
+                if (cancion_num >= 1 && cancion_num <= TOTAL_CANCIONES) {
+                    strcpy(nombre_cancion, catalogo_canciones[cancion_num - 1]);
+                    enqueue_front(nombre_cancion, &playlist);
+                    printf("✓ Canción agregada al INICIO de la playlist\n");
+                    printf("   → \"%s\"\n", nombre_cancion);
+                } else {
+                    printf("✗ Número de canción inválido\n");
+                }
+                break;
+                
+            case 6:
+                display_playlist(&playlist);
+                break;
+                
+            case 7:
+                mostrar_catalogo();
+                break;
+                
+            case 8:
+                printf("\n📊 Total de canciones en playlist: %d\n", get_count(&playlist));
+                break;
+                
+            case 9:
+                if (empty(&playlist)) {
+                    printf("\n✅ Sí, la playlist está vacía\n");
+                } else {
+                    printf("\n❌ No, la playlist tiene %d canción(es)\n", get_count(&playlist));
+                }
+                break;
+                
+            case 0:
+                printf("\n🎶 Saliendo del sistema de playlist...\n");
+                break;
+                
+            default:
+                printf("\n✗ Opción inválida\n");
+        }
+        
+        if (opcion != 0 && opcion != 6 && opcion != 7) {
+            printf("\nPresione Enter para continuar...");
+            limpiar_buffer();
+            getchar();
+        } else if (opcion == 6 || opcion == 7) {
+            printf("\nPresione Enter para continuar...");
+            limpiar_buffer();
+            getchar();
+        }
+        
+    } while(opcion != 0);
+    
+    /* Liberar memoria */
+    while(!empty(&playlist)) {
+        deque(&playlist);
+    }
+    
+    printf("\n🎵 ¡Hasta pronto! 🎵\n");
+    
+    return 0;
+}
